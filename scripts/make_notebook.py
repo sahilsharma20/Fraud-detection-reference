@@ -39,7 +39,7 @@ def build() -> None:
         "The two models are **chained**: flagged claims stop at Stage 1 (`NEEDS REVIEW`); "
         "genuine claims flow to Stage 2 for a severity estimate.\n\n"
         "> This notebook reuses the project's shared preprocessing pipeline so experiments match "
-        "production. The full modular code lives in `src/`, served via `flask_app.py` / `app.py`."
+        "production. The full modular code lives in `src/`, served via `flask_app.py` (Flask)."
     ))
 
     cells.append(_md("## 0 · Setup\nImport the scientific stack and the project's helpers."))
@@ -260,7 +260,7 @@ def build() -> None:
         "## 8 · Chained inference — putting it together\n"
         "A claim comes in → fraud check → if genuine, predict severity; if flagged, return "
         "`NEEDS REVIEW` with **no** severity. This is exactly what `src/inference_pipeline.py` does "
-        "in production and what both the Flask and FastAPI apps serve."
+        "in production and what the Flask app serves."
     ))
     cells.append(_code(
         "def screen_claim(row: pd.DataFrame):\n"
@@ -284,7 +284,7 @@ def build() -> None:
         "**cost-optimised threshold**) and a **severity regressor** (trained on genuine claims only, "
         "with two leakage guards and a log-transformed target), made explainable with **SHAP**.\n\n"
         "**Next:** the production code is in `src/` (config-driven, logged, tested), served by "
-        "`flask_app.py` (Flask) or `app.py` (FastAPI), with MLflow tracking, drift monitoring, Docker "
+        "`flask_app.py` (Flask), with MLflow tracking, drift monitoring, Docker "
         "and CI. See `BUILD_GUIDE.md` to build it all from scratch, and `reports/report.html` for the "
         "full write-up."
     ))

@@ -1,6 +1,6 @@
 """Module 9 — Chained inference: the SINGLE SOURCE OF TRUTH for prediction.
 
-The API (app.py) and the web UI both call this and nothing else. There is
+The Flask app (flask_app.py) and the web UI both call this and nothing else. There is
 exactly one implementation of the business rule:
 
     claim --> Stage 1 fraud model --> P(fraud)

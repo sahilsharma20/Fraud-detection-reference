@@ -1,11 +1,10 @@
-"""Flask serving layer — an alternative to app.py (FastAPI).
+"""Flask serving layer — the web app + JSON API.
 
 WHY THIS EXISTS:
     The project's serving logic lives entirely in ``src/inference_pipeline.py``
-    (the single source of truth). This Flask app is a thin HTTP shell around it,
-    proving the same chained pipeline can be served by *any* framework with zero
-    duplicated prediction logic. It serves the IDENTICAL frontend (frontend/ +
-    static/) and the same endpoints as the FastAPI version.
+    (the single source of truth). This Flask app is a thin HTTP shell around it:
+    it serves the web UI (frontend/ + static/) and the /predict API, with zero
+    duplicated prediction logic.
 
 Run locally:
     python flask_app.py                 # http://localhost:5000
@@ -58,7 +57,7 @@ def predict():
     """Score one claim through the chained two-stage pipeline (Pydantic-validated)."""
     try:
         payload = request.get_json(force=True, silent=True) or {}
-        claim = ClaimRequest(**payload)           # same validation as the FastAPI app
+        claim = ClaimRequest(**payload)           # Pydantic validation of untrusted input
     except ValidationError as exc:
         return jsonify({"detail": exc.errors()}), 422
     try:

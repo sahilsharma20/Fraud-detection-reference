@@ -31,11 +31,8 @@ train:  ## Run the full pipeline: ingest -> EDA -> fraud -> threshold -> severit
 report:  ## Build the self-contained shareable report.html
 	$(PY) -m scripts.build_report
 
-serve:  ## Run the Flask app + web UI locally on :5000 (primary)
+serve:  ## Run the Flask app + web UI locally on :5000
 	$(PY) flask_app.py
-
-serve-fastapi:  ## Run the FastAPI variant + Swagger on :8000
-	$(PY) -m uvicorn app:app --host 0.0.0.0 --port 8000 --reload
 
 notebook:  ## Build + launch the Jupyter ML walkthrough
 	$(PY) -m scripts.make_notebook && $(PY) -m jupyter notebook notebooks/fraud_severity_project.ipynb
@@ -50,10 +47,10 @@ test:  ## Run unit + integration tests
 	$(PY) -m pytest -q
 
 lint:  ## Lint with ruff
-	$(PY) -m ruff check src tests app.py scripts monitoring
+	$(PY) -m ruff check src tests flask_app.py scripts monitoring
 
 format:  ## Auto-format with ruff
-	$(PY) -m ruff format src tests app.py scripts monitoring
+	$(PY) -m ruff format src tests flask_app.py scripts monitoring
 
 clean:  ## Remove caches and generated artifacts
 	rm -rf __pycache__ .pytest_cache .ruff_cache reports/plots reports/metrics logs

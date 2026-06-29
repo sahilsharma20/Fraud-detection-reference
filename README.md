@@ -27,11 +27,10 @@ flowchart LR
     E --> F[✅ GENUINE<br/>₹ predicted severity ± MAE<br/>+ SHAP top factors]
 ```
 
-A single web service hosts **both** the JSON API and the web UI. It ships in two interchangeable
-flavours — **Flask** ([`flask_app.py`](flask_app.py), the primary/deployed app) and **FastAPI**
-([`app.py`](app.py), with auto Swagger at `/docs`) — and **both** call the *same* one inference
-implementation ([`src/inference_pipeline.py`](src/inference_pipeline.py)). There is no duplicated
-prediction logic anywhere; the framework is just a thin shell.
+A single **Flask** service ([`flask_app.py`](flask_app.py)) hosts **both** the JSON API and the web
+UI, and it calls the one inference implementation ([`src/inference_pipeline.py`](src/inference_pipeline.py)).
+There is no duplicated prediction logic anywhere — the web framework is just a thin shell around the
+models.
 
 | | Genuine claim | Flagged claim |
 |---|---|---|
@@ -133,13 +132,12 @@ This system handles **two** distinct leakage problems — both explained in code
 │   ├── schemas.py                   # Pydantic request/response contracts
 │   └── train.py                     # one-command end-to-end training
 ├── monitoring/drift_monitor.py      # PSI drift + retraining policy
-├── flask_app.py                     # Flask: serves API + web UI (primary)
-├── app.py                           # FastAPI variant: API + web UI + Swagger
+├── flask_app.py                     # Flask: serves the web UI + API
 ├── frontend/ + static/              # the user-facing web app
 ├── notebooks/                       # runnable Jupyter ML walkthrough
 ├── scripts/                         # synthetic data + notebook + report builders
-├── tests/                           # pytest unit + Flask/FastAPI integration tests
-├── BUILD_GUIDE.md                   # step-by-step guide to build it from scratch
+├── tests/                           # pytest unit + Flask integration tests
+├── BUILD_GUIDE.md / HOW_TO_RUN.md   # build-from-scratch guide / simple run guide
 ├── reports/report.html              # shareable technical report (Deliverable C)
 ├── Dockerfile / .dockerignore       # multi-stage, non-root
 ├── .github/workflows/ci.yml         # lint → test → build image
@@ -166,13 +164,14 @@ make train       # writes models/, reports/plots, MLflow runs
 # 4. build the shareable report
 make report      # -> reports/report.html
 
-# 5. run the app (API + web UI)
-make serve            # Flask  -> http://localhost:5000   (primary)
-make serve-fastapi    # FastAPI -> http://localhost:8000  (Swagger at /docs)
+# 5. run the app (Flask web UI + API)
+make serve            # http://localhost:5000
 
 # (optional) open the interactive Jupyter ML walkthrough
 make notebook         # notebooks/fraud_severity_project.ipynb
 ```
+
+> 👉 New here? See **[`HOW_TO_RUN.md`](HOW_TO_RUN.md)** for the simplest possible run instructions.
 
 ### Run with Docker
 
@@ -184,7 +183,7 @@ make docker-run            # http://localhost:8000
 ### Call the API directly
 
 ```bash
-# Flask (make serve) listens on :5000; FastAPI (make serve-fastapi) and Docker on :8000
+# Flask listens on :5000 locally (Docker uses :8000)
 curl -s http://localhost:5000/predict -H "Content-Type: application/json" \
   -d '{"incident_severity":"Major Damage","police_report_available":"NO",
        "authorities_contacted":"None","total_claim_amount":92000,"vehicle_claim":50000}'
@@ -277,4 +276,4 @@ the pipeline.
 
 Dataset schema: Kaggle "Auto Insurance Claims Fraud Detection"
 (<https://www.kaggle.com/datasets/buntyshah/auto-insurance-claims-data>). Built with scikit-learn,
-XGBoost, SHAP, MLflow, FastAPI. MIT License.
+XGBoost, SHAP, MLflow, Flask. MIT License.

@@ -19,7 +19,7 @@ ignore = [
     "D107",            # don't require docstrings on __init__ (class docstring covers it)
     "D401",            # imperative-mood nitpick — not worth the churn
     "E501",            # line length handled by formatter
-    "B008",            # FastAPI Depends() in defaults is idiomatic
+    "B008",            # function calls in argument defaults (idiomatic in some libs)
 ]
 
 [tool.ruff.lint.per-file-ignores]

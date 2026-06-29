@@ -477,12 +477,12 @@ def test_cost_counts_mistakes():
     cost, fn, fp = ... # at 0.5 -> 1 missed fraud + 1 false alarm
     assert fn == 1 and fp == 1
 
-# tests/test_api.py  (integration — hits the real endpoint)
-from fastapi.testclient import TestClient   # (or use Flask's app.test_client())
-def test_genuine_gets_severity(client):
+# tests/test_flask.py  (integration — hits the real endpoint via Flask's test client)
+def test_genuine_gets_severity(client):     # client = flask_app.app.test_client()
     r = client.post("/predict", json=sample_genuine_claim())
-    assert r.json()["fraud"]["verdict"] == "GENUINE"
-    assert r.json()["severity"]["predicted_amount"] is not None
+    body = r.get_json()
+    assert body["fraud"]["verdict"] == "GENUINE"
+    assert body["severity"]["predicted_amount"] is not None
 ```
 Run: `pytest -q`.
 

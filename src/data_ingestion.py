@@ -8,7 +8,7 @@ DESIGN DECISIONS
    value. We validate the raw frame the moment it's read. If the contract is
    violated we raise immediately with a precise message, instead of producing a
    confidently-wrong model three stages later. (Pydantic guards the *API*
-   boundary in app.py; pandera guards the *training-data* boundary here — right
+   boundary in flask_app.py; pandera guards the *training-data* boundary here — right
    tool for each boundary.)
 
 2. **Random stratified** split, NOT time-based — and here's the justification a

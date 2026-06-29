@@ -27,7 +27,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Lint (ruff)
-        run: ruff check src tests app.py scripts monitoring
+        run: ruff check src tests flask_app.py scripts monitoring
 
       - name: Run tests (unit + API integration)
         run: pytest -q
