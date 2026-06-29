@@ -25,6 +25,15 @@ shap==0.46.0
 fastapi==0.115.0
 uvicorn[standard]==0.30.6
 jinja2==3.1.4            # server-side templating for the web UI
+flask==3.0.3            # alternative web framework (used by flask_app.py + the build guide)
+flask-cors==4.0.1       # CORS for the Flask app (if UI is served separately)
+gunicorn==23.0.0        # production WSGI server for the Flask app
+
+# --- notebooks (Jupyter ML walkthrough) ---
+notebook==7.2.2
+nbconvert==7.16.4
+nbformat==5.10.4
+ipykernel==6.29.5
 
 # --- plotting (EDA + report artifacts) ---
 matplotlib==3.9.2

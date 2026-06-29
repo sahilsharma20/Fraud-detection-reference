@@ -31,8 +31,14 @@ train:  ## Run the full pipeline: ingest -> EDA -> fraud -> threshold -> severit
 report:  ## Build the self-contained shareable report.html
 	$(PY) -m scripts.build_report
 
-serve:  ## Run the FastAPI app + web UI locally on :8000
+serve:  ## Run the Flask app + web UI locally on :5000 (primary)
+	$(PY) flask_app.py
+
+serve-fastapi:  ## Run the FastAPI variant + Swagger on :8000
 	$(PY) -m uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+
+notebook:  ## Build + launch the Jupyter ML walkthrough
+	$(PY) -m scripts.make_notebook && $(PY) -m jupyter notebook notebooks/fraud_severity_project.ipynb
 
 docker-build:  ## Build the production Docker image
 	docker build -t fraud-severity:latest .

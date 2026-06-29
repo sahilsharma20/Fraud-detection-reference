@@ -44,7 +44,7 @@ COPY --from=builder /opt/venv /opt/venv
 
 # copy ONLY what the service needs at runtime (see .dockerignore for exclusions)
 COPY src/ ./src/
-COPY app.py config.yaml ./
+COPY flask_app.py app.py config.yaml ./
 COPY frontend/ ./frontend/
 COPY static/ ./static/
 COPY models/ ./models/
@@ -52,8 +52,14 @@ COPY models/ ./models/
 USER appuser
 EXPOSE 8000
 
-# honour the platform-provided $PORT (Render/Railway inject it); default 8000 local
-CMD ["sh", "-c", "uvicorn app:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Serve the FLASK app with gunicorn (Linux). Honour the platform-provided $PORT
+# (Render/Railway inject it); default 8000 locally.
+#   --workers 1 + --preload: load the models/ML libs ONCE (fits the 512MB free tier;
+#                            2+ workers each re-load ~250MB and would OOM).
+#   --threads 4:             concurrency for the SHAP-bound requests within one worker.
+# To serve the FastAPI variant instead, swap the CMD for:
+#   uvicorn app:app --host 0.0.0.0 --port ${PORT:-8000}
+CMD ["sh", "-c", "gunicorn flask_app:app -b 0.0.0.0:${PORT:-8000} --workers 1 --threads 4 --timeout 120 --preload"]
 
 # Container-level health check hitting the readiness endpoint.
 HEALTHCHECK --interval=30s --timeout=4s --start-period=20s --retries=3 \

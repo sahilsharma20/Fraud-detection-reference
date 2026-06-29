@@ -11,6 +11,10 @@ scikit-learn==1.5.1
 xgboost==2.1.1
 shap==0.46.0
 pydantic==2.9.2
+# Flask is the primary served app (flask_app.py); FastAPI (app.py) is the alternative.
+flask==3.0.3
+flask-cors==4.0.1
+gunicorn==23.0.0          # production WSGI server (Linux) for the Flask app
 fastapi==0.115.0
 uvicorn[standard]==0.30.6
 jinja2==3.1.4
