@@ -1,0 +1,53 @@
+# ─── Python ───
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# ─── Data: never commit raw data (size + licensing). Synthetic sample is OK. ───
+data/raw/
+data/processed/
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# ─── Trained artifacts ───
+# DELIBERATE CHOICE: the ~10MB model files ARE committed so the live demo deploys
+# with zero build-time training (the most fragile step on free hosting tiers).
+# Regenerate anytime with `make train`. In a larger production system these would
+# live in a model registry / object store (MLflow, S3), not git — see report.
+# (models/*.joblib and models/inference_config.json are intentionally tracked.)
+
+# ─── Experiment tracking ───
+mlruns/
+mlartifacts/
+
+# ─── Generated intermediate artifacts (plots/metrics get EMBEDDED into the
+#     self-contained report.html, so they don't need tracking individually). ───
+reports/plots/
+reports/metrics/
+# reports/report.html IS committed — it's the shareable deliverable (self-contained,
+# images embedded as base64). Regenerate with `make report`.
+
+# ─── Logs & secrets ───
+logs/
+*.log
+.env
+.env.*
+
+# ─── OS / editor cruft ───
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ─── dev/scratch artifacts ───
+.playwright-mcp/
+report_preview.jpeg
+pip_install.log

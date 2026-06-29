@@ -1,0 +1,8 @@
+# Normalise line endings (repo authored on Windows) and mark binaries so git
+# doesn't try to diff/normalise them.
+* text=auto eol=lf
+*.png binary
+*.jpeg binary
+*.jpg binary
+*.joblib binary
+*.ico binary

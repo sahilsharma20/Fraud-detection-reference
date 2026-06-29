@@ -1,0 +1,20 @@
+# Optional but recommended: catch formatting/lint/large-file mistakes BEFORE they
+# hit CI. Install once with `pre-commit install`. Runs on every `git commit`.
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files   # stops a stray 100MB model/data file
+        args: ["--maxkb=2000"]
+      - id: check-merge-conflict
+      - id: detect-private-key
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.8
+    hooks:
+      - id: ruff               # lint
+        args: ["--fix"]
+      - id: ruff-format        # format

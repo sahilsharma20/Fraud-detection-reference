@@ -1,0 +1,192 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# SINGLE SOURCE OF TRUTH for all paths, hyperparameters, thresholds and business
+# constants. Nothing in src/ hardcodes a path or a magic number — everything is
+# read from here. This is the #1 thing that separates production code from a
+# notebook: you can re-point data, retune a model, or change the cost matrix
+# WITHOUT touching a line of Python.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+project:
+  name: insurance-claim-fraud-severity
+  random_state: 42
+
+paths:
+  raw_data: data/raw/insurance_claims.csv
+  processed_dir: data/processed
+  train_data: data/processed/train.csv
+  test_data: data/processed/test.csv
+  models_dir: models
+  fraud_model: models/fraud_model.joblib            # full sklearn Pipeline (preprocess + clf)
+  severity_model: models/severity_model.joblib      # full sklearn Pipeline (preprocess + reg)
+  inference_config: models/inference_config.json    # chosen threshold + metadata, written by training
+  reference_profile: models/reference_profile.json  # training feature distribution, for drift
+  metrics_dir: reports/metrics
+  plots_dir: reports/plots
+  report_html: reports/report.html
+  log_dir: logs
+
+data:
+  target_fraud: fraud_reported
+  target_severity: total_claim_amount
+  fraud_positive_label: "Y"        # in the raw file fraud is encoded Y/N
+  test_size: 0.2
+  # SPLIT STRATEGY: random stratified (NOT time-based). Justified in
+  # data_ingestion.py — this dataset has no reliable claim-arrival ordering and
+  # no production "predict the future" temporal requirement, so a random
+  # stratified split (preserving the ~25% fraud rate in both folds) is correct.
+  split_strategy: random_stratified
+
+  # Columns dropped for BOTH models: identifiers, free-text, raw dates (replaced
+  # by engineered tenure), and the junk trailing column the Kaggle export ships.
+  drop_columns:
+    - policy_number
+    - insured_zip
+    - incident_location
+    - auto_model        # ~39 levels, near-id cardinality -> drops, keep auto_make
+    - _c39              # empty junk column in the Kaggle CSV
+
+  # Raw date columns consumed by the engineered `customer_tenure_days` feature
+  # and then dropped (see RawFeatureEngineer in feature_engineering.py).
+  date_columns:
+    bind_date: policy_bind_date
+    incident_date: incident_date
+
+  # ─── LEAKAGE GUARD #1 (target-composition leakage for the SEVERITY model) ───
+  # total_claim_amount == injury_claim + property_claim + vehicle_claim, exactly.
+  # Feeding these three to the severity regressor lets it reconstruct the target
+  # with R²≈1.0 and learn nothing generalizable. They are dropped from the
+  # SEVERITY feature set only (they remain valid signal for the fraud model).
+  severity_leakage_columns:
+    - injury_claim
+    - property_claim
+    - vehicle_claim
+
+# Feature lists are declared explicitly (config-driven) AND validated against the
+# real columns at runtime — if the schema drifts, we fail loudly instead of
+# silently training on the wrong matrix.
+features:
+  numeric:
+    - months_as_customer
+    - age
+    - policy_deductable
+    - policy_annual_premium
+    - umbrella_limit
+    - capital-gains
+    - capital-loss
+    - incident_hour_of_the_day
+    - number_of_vehicles_involved
+    - bodily_injuries
+    - witnesses
+    - auto_year
+    - customer_tenure_days        # engineered: incident_date - policy_bind_date
+  # numeric columns that are valid for FRAUD but are leakage for SEVERITY
+  numeric_claim_components:
+    - total_claim_amount
+    - injury_claim
+    - property_claim
+    - vehicle_claim
+  categorical:
+    - policy_state
+    - policy_csl
+    - insured_sex
+    - insured_education_level
+    - insured_occupation
+    - insured_hobbies
+    - insured_relationship
+    - incident_type
+    - collision_type
+    - incident_severity
+    - authorities_contacted
+    - incident_state
+    - incident_city
+    - property_damage
+    - police_report_available
+    - auto_make
+
+fraud_model:
+  # Train all three, pick the best by primary_metric on the held-out test set.
+  candidates: [logistic_regression, random_forest, xgboost]
+  primary_metric: pr_auc          # NOT accuracy/roc_auc — see fraud_model.py
+  # IMBALANCE STRATEGY: handled by the cost-sensitive THRESHOLD (Module 5), NOT by
+  # class reweighting. Reasoning: prevalence here is ~27% (moderate, not extreme),
+  # and reweighting (class_weight / scale_pos_weight) inflates predicted
+  # probabilities — which would corrupt the cost-vs-threshold optimisation that
+  # depends on trustworthy probabilities. Doing both is double-correcting. We pick
+  # ONE lever (the threshold) and keep probabilities well-calibrated.
+  handle_imbalance_via_weights: false
+  logistic_regression:
+    C: 1.0
+    max_iter: 1000
+    class_weight: null
+  random_forest:
+    n_estimators: 300
+    max_depth: 12
+    min_samples_leaf: 5
+    class_weight: null
+  xgboost:
+    n_estimators: 400
+    max_depth: 5
+    learning_rate: 0.05
+    subsample: 0.9
+    colsample_bytree: 0.9
+
+# ─── COST-SENSITIVE THRESHOLD (Module 5) ───
+# The default 0.5 threshold is almost never optimal under asymmetric costs.
+# A missed fraud (FN) costs ~15x a wrongly-flagged genuine claim (FP), so the
+# optimizer pushes the threshold DOWN to catch more fraud.
+threshold:
+  cost_false_negative: 30000      # avg fraudulent payout leaked (currency units)
+  cost_false_positive: 5000       # SIU analyst time + delayed legit payout + churn risk
+  # 6:1 asymmetry => cost-optimal cutoff lands well below 0.5 (~0.25): the business
+  # consciously accepts more false alarms (routed to human review, NOT auto-denied)
+  # because a missed fraud is 6x costlier than investigating a genuine claim.
+  default_threshold: 0.5
+  grid_start: 0.01
+  grid_stop: 0.99
+  grid_steps: 99
+  chosen_threshold: null          # written to models/inference_config.json by the optimizer
+
+severity_model:
+  candidates: [linear_regression, random_forest, xgboost]
+  primary_metric: rmse
+  # EDA confirms total_claim_amount is right-skewed -> train on log1p(target) and
+  # invert with expm1 at predict time. Metrics are always reported in the
+  # ORIGINAL currency space, never log space.
+  log_transform_target: true
+  random_forest:
+    n_estimators: 300
+    max_depth: 14
+    min_samples_leaf: 5
+  xgboost:
+    n_estimators: 500
+    max_depth: 5
+    learning_rate: 0.05
+    subsample: 0.9
+    colsample_bytree: 0.9
+
+mlflow:
+  tracking_uri: mlruns                       # local file store (portable, no server needed)
+  experiment_fraud: fraud_classification
+  experiment_severity: severity_regression
+  registered_fraud_model: fraud_classifier   # MLflow Model Registry name
+  registered_severity_model: severity_regressor
+
+explainability:
+  top_n_reasons: 5
+  background_samples: 100         # SHAP background sample size for the explainer
+
+monitoring:
+  # Population Stability Index thresholds (industry-standard rule of thumb).
+  psi_warn: 0.10                  # 0.10-0.25 => moderate drift, investigate
+  psi_alert: 0.25                 # > 0.25    => significant drift, retrain
+  numeric_bins: 10
+
+# Business assumptions for the impact calculation. EVERY number the report cites
+# is traceable to a value here — no figures invented in prose.
+business:
+  currency_symbol: "₹"
+  annual_claim_volume: 100000
+  fraud_rate: 0.10
+  avg_fraud_payout: 30000
+  investigation_cost: 2000
+  reserving_baseline_mae: null    # filled from severity model results at report time

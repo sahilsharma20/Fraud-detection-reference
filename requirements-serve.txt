@@ -1,0 +1,18 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# RUNTIME-ONLY dependencies for the production Docker image.
+# Deliberately excludes mlflow, pandera, matplotlib, seaborn, pytest, pre-commit
+# (training/EDA/dev tooling) so the served image stays small and boots fast.
+# SHAP + xgboost ARE included because the /predict response surfaces live
+# SHAP-based "top reasons" for every claim.
+# ─────────────────────────────────────────────────────────────────────────────
+numpy==1.26.4
+pandas==2.2.2
+scikit-learn==1.5.1
+xgboost==2.1.1
+shap==0.46.0
+pydantic==2.9.2
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+jinja2==3.1.4
+pyyaml==6.0.2
+joblib==1.4.2

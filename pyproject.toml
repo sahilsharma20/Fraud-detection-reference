@@ -1,0 +1,33 @@
+# Tooling config (ruff + pytest). Kept in one place so the linter, the
+# pre-commit hook and CI all agree on the same rules.
+[project]
+name = "insurance-claim-fraud-severity"
+version = "1.0.0"
+description = "Two-stage ML system: fraud classification + conditional claim-severity prediction"
+requires-python = ">=3.11"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = [".venv", "mlruns", "data", "models"]
+
+[tool.ruff.lint]
+# pycodestyle, pyflakes, isort, bugbear, pyupgrade, docstrings
+select = ["E", "F", "I", "B", "UP", "D"]
+ignore = [
+    "D203", "D213",   # conflicting docstring conventions
+    "D107",            # don't require docstrings on __init__ (class docstring covers it)
+    "D401",            # imperative-mood nitpick — not worth the churn
+    "E501",            # line length handled by formatter
+    "B008",            # FastAPI Depends() in defaults is idiomatic
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["D"]      # don't demand docstrings in tests
+"scripts/*" = ["D"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]          # so `import src`, `scripts`, `monitoring` resolve from root
+addopts = "-ra -q"
+filterwarnings = ["ignore::DeprecationWarning", "ignore::FutureWarning"]

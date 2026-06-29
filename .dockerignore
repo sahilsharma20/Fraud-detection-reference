@@ -1,0 +1,33 @@
+# Keep the build context small & the image clean. Everything the runtime does
+# NOT need is excluded so `docker build` is fast and the layer cache is stable.
+.git
+.github
+.venv
+venv
+__pycache__
+*.pyc
+.pytest_cache
+.ruff_cache
+.ipynb_checkpoints
+
+# Training-only assets — the image serves pre-trained models, it never trains.
+mlruns
+mlartifacts
+data/raw
+data/processed
+logs
+*.log
+
+# Docs / dev files not needed at runtime
+reports/plots
+reports/metrics
+notebooks
+tests
+*.md
+!README.md
+pip_install.log
+
+# Local env
+.env
+.env.*
+.DS_Store
