@@ -1,0 +1,12 @@
+# Render Blueprint (Module 15) — one-click deploy of the Dockerised service.
+# In the Render dashboard: New + -> Blueprint -> connect this repo -> Apply.
+# Render reads this file, builds the Dockerfile, injects $PORT, and gives you a
+# public https URL. Free tier; no env vars required (models are baked in).
+services:
+  - type: web
+    name: claimguard-fraud-severity
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    autoDeploy: true     # redeploy automatically on every push to the default branch
