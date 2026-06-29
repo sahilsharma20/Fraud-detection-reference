@@ -1,0 +1,9 @@
+{
+  "fraud_threshold": 0.26,
+  "threshold_costs": {
+    "fn": 30000.0,
+    "fp": 5000.0
+  },
+  "severity_mae": 12592.12,
+  "severity_model": "random_forest"
+}

@@ -1,0 +1,398 @@
+{
+  "numeric": {
+    "months_as_customer": {
+      "edges": [
+        0.0,
+        48.900000000000006,
+        90.0,
+        142.0,
+        196.0,
+        241.0,
+        287.0,
+        336.0,
+        381.0,
+        431.10000000000014,
+        479.0
+      ],
+      "props": [
+        0.1,
+        0.099375,
+        0.099375,
+        0.098125,
+        0.100625,
+        0.101875,
+        0.1,
+        0.098125,
+        0.1025,
+        0.1
+      ]
+    },
+    "age": {
+      "edges": [
+        19.0,
+        32.0,
+        39.0,
+        43.0,
+        47.0,
+        51.0,
+        55.0,
+        59.0,
+        63.0,
+        70.0,
+        80.0
+      ],
+      "props": [
+        0.091875,
+        0.10625,
+        0.089375,
+        0.09375,
+        0.10125,
+        0.1025,
+        0.101875,
+        0.09625,
+        0.114375,
+        0.1025
+      ]
+    },
+    "policy_deductable": {
+      "edges": [
+        500.0,
+        1000.0,
+        2000.0
+      ],
+      "props": [
+        0.338125,
+        0.661875
+      ]
+    },
+    "policy_annual_premium": {
+      "edges": [
+        440.82,
+        918.053,
+        1033.494,
+        1115.237,
+        1188.262,
+        1246.395,
+        1310.46,
+        1376.029,
+        1454.314,
+        1566.761,
+        2271.98
+      ],
+      "props": [
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1
+      ]
+    },
+    "umbrella_limit": {
+      "edges": [
+        0.0,
+        4000000.0,
+        6000000.0,
+        8000000.0
+      ],
+      "props": [
+        0.484375,
+        0.17625,
+        0.339375
+      ]
+    },
+    "capital-gains": {
+      "edges": [
+        0.0,
+        1995.000000000005,
+        25241.7,
+        49819.6,
+        73927.8,
+        99984.0
+      ],
+      "props": [
+        0.6,
+        0.1,
+        0.1,
+        0.1,
+        0.1
+      ]
+    },
+    "capital-loss": {
+      "edges": [
+        -109746.0,
+        -70651.5,
+        -32694.6,
+        0.0
+      ],
+      "props": [
+        0.1,
+        0.1,
+        0.8
+      ]
+    },
+    "incident_hour_of_the_day": {
+      "edges": [
+        0.0,
+        2.0,
+        4.0,
+        6.0,
+        9.0,
+        11.0,
+        14.0,
+        16.0,
+        18.0,
+        21.0,
+        23.0
+      ],
+      "props": [
+        0.081875,
+        0.08625,
+        0.085625,
+        0.138125,
+        0.0825,
+        0.1175,
+        0.074375,
+        0.086875,
+        0.128125,
+        0.11875
+      ]
+    },
+    "number_of_vehicles_involved": {
+      "edges": [
+        1.0,
+        2.0,
+        3.0,
+        4.0
+      ],
+      "props": [
+        0.50875,
+        0.25125,
+        0.24
+      ]
+    },
+    "bodily_injuries": {
+      "edges": [
+        0.0,
+        1.0,
+        2.0
+      ],
+      "props": [
+        0.333125,
+        0.666875
+      ]
+    },
+    "witnesses": {
+      "edges": [
+        0.0,
+        1.0,
+        2.0,
+        3.0
+      ],
+      "props": [
+        0.244375,
+        0.2525,
+        0.503125
+      ]
+    },
+    "auto_year": {
+      "edges": [
+        1995.0,
+        1997.0,
+        1999.0,
+        2001.0,
+        2003.0,
+        2005.0,
+        2007.0,
+        2009.0,
+        2011.0,
+        2013.0,
+        2015.0
+      ],
+      "props": [
+        0.093125,
+        0.09,
+        0.098125,
+        0.10625,
+        0.09375,
+        0.093125,
+        0.09625,
+        0.100625,
+        0.093125,
+        0.135625
+      ]
+    },
+    "customer_tenure_days": {
+      "edges": [
+        82.0,
+        727.8,
+        1333.4,
+        1813.8000000000002,
+        2362.0,
+        2930.5,
+        3423.4,
+        4046.0,
+        4574.2,
+        5106.0,
+        5787.0
+      ],
+      "props": [
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.099375,
+        0.100625,
+        0.099375,
+        0.100625
+      ]
+    }
+  },
+  "categorical": {
+    "policy_state": {
+      "OH": 0.35125,
+      "IL": 0.331875,
+      "IN": 0.316875
+    },
+    "policy_csl": {
+      "500/1000": 0.33875,
+      "100/300": 0.338125,
+      "250/500": 0.323125
+    },
+    "insured_sex": {
+      "FEMALE": 0.51,
+      "MALE": 0.49
+    },
+    "insured_education_level": {
+      "College": 0.155,
+      "Masters": 0.1525,
+      "PhD": 0.14375,
+      "MD": 0.1425,
+      "Associate": 0.135625,
+      "High School": 0.135625,
+      "JD": 0.135
+    },
+    "insured_occupation": {
+      "machine-op-inspct": 0.084375,
+      "protective-serv": 0.084375,
+      "tech-support": 0.08,
+      "handlers-cleaners": 0.07875,
+      "transport-moving": 0.078125,
+      "adm-clerical": 0.0775,
+      "priv-house-serv": 0.073125,
+      "craft-repair": 0.073125,
+      "farming-fishing": 0.06375,
+      "exec-managerial": 0.063125,
+      "prof-specialty": 0.0625,
+      "armed-forces": 0.061875,
+      "sales": 0.060625,
+      "other-service": 0.05875
+    },
+    "insured_hobbies": {
+      "sleeping": 0.06,
+      "yachting": 0.059375,
+      "exercise": 0.05625,
+      "chess": 0.055625,
+      "polo": 0.055625,
+      "bungie-jumping": 0.054375,
+      "kayaking": 0.053125,
+      "base-jumping": 0.051875,
+      "board-games": 0.051875,
+      "cross-fit": 0.050625,
+      "dancing": 0.05,
+      "video-games": 0.049375,
+      "skydiving": 0.04875,
+      "hiking": 0.048125,
+      "golf": 0.048125,
+      "camping": 0.0475,
+      "paintball": 0.04375,
+      "basketball": 0.041875,
+      "movies": 0.04,
+      "reading": 0.03375
+    },
+    "insured_relationship": {
+      "wife": 0.181875,
+      "not-in-family": 0.171875,
+      "own-child": 0.168125,
+      "husband": 0.163125,
+      "other-relative": 0.1625,
+      "unmarried": 0.1525
+    },
+    "incident_type": {
+      "Single Vehicle Collision": 0.418125,
+      "Multi-vehicle Collision": 0.345,
+      "Vehicle Theft": 0.15625,
+      "Parked Car": 0.080625
+    },
+    "collision_type": {
+      "Front Collision": 0.2575,
+      "Rear Collision": 0.255,
+      "Side Collision": 0.250625,
+      "__missing__": 0.236875
+    },
+    "incident_severity": {
+      "Minor Damage": 0.34875,
+      "Major Damage": 0.256875,
+      "Trivial Damage": 0.24625,
+      "Total Loss": 0.148125
+    },
+    "authorities_contacted": {
+      "Police": 0.36375,
+      "Ambulance": 0.20625,
+      "Other": 0.153125,
+      "Fire": 0.14,
+      "__missing__": 0.136875
+    },
+    "incident_state": {
+      "OH": 0.146875,
+      "WV": 0.145625,
+      "VA": 0.144375,
+      "SC": 0.143125,
+      "PA": 0.1425,
+      "NY": 0.13875,
+      "NC": 0.13875
+    },
+    "incident_city": {
+      "Hillsdale": 0.155,
+      "Arlington": 0.150625,
+      "Riverwood": 0.144375,
+      "Springfield": 0.14,
+      "Columbus": 0.139375,
+      "Northbend": 0.136875,
+      "Northbrook": 0.13375
+    },
+    "property_damage": {
+      "__missing__": 0.40125,
+      "YES": 0.3025,
+      "NO": 0.29625
+    },
+    "police_report_available": {
+      "NO": 0.3575,
+      "YES": 0.345,
+      "__missing__": 0.2975
+    },
+    "auto_make": {
+      "Nissan": 0.0875,
+      "Honda": 0.07875,
+      "Suburu": 0.0775,
+      "Jeep": 0.0775,
+      "Audi": 0.07625,
+      "Mercedes": 0.074375,
+      "BMW": 0.07125,
+      "Saab": 0.06875,
+      "Volkswagen": 0.06875,
+      "Accura": 0.068125,
+      "Dodge": 0.066875,
+      "Ford": 0.066875,
+      "Toyota": 0.063125,
+      "Chevrolet": 0.054375
+    }
+  },
+  "n_reference": 1600
+}
