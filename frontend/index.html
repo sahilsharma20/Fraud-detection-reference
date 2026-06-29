@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ClaimGuard · Fraud + Severity</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">🛡️</span>
+      <div>
+        <h1>ClaimGuard</h1>
+        <p>Two-stage auto-insurance claim screening — fraud check, then severity estimate</p>
+      </div>
+    </div>
+    <div class="pipeline-pill" id="pipelinePill">
+      claim → <b>fraud model</b> → genuine&nbsp;? → <b>severity model</b>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- ───────────── FORM ───────────── -->
+    <section class="card form-card">
+      <div class="card-head">
+        <h2>Claim details</h2>
+        <div class="sample-btns">
+          <button class="btn ghost" id="loadGenuine" type="button">Load genuine sample</button>
+          <button class="btn ghost" id="loadFraud" type="button">Load suspicious sample</button>
+        </div>
+      </div>
+
+      <form id="claimForm" class="grid">
+        <label>Age<input type="number" name="age" value="42" min="16" max="100" /></label>
+        <label>Months as customer<input type="number" name="months_as_customer" value="120" min="0" /></label>
+        <label>Annual premium<input type="number" step="0.01" name="policy_annual_premium" value="1280.5" /></label>
+
+        <label>Incident type
+          <select name="incident_type">
+            <option>Single Vehicle Collision</option><option selected>Multi-vehicle Collision</option>
+            <option>Vehicle Theft</option><option>Parked Car</option>
+          </select>
+        </label>
+        <label>Incident severity
+          <select name="incident_severity">
+            <option>Trivial Damage</option><option selected>Minor Damage</option>
+            <option>Major Damage</option><option>Total Loss</option>
+          </select>
+        </label>
+        <label>Collision type
+          <select name="collision_type">
+            <option>Front Collision</option><option selected>Rear Collision</option>
+            <option>Side Collision</option><option value="?">Unknown</option>
+          </select>
+        </label>
+
+        <label>Authorities contacted
+          <select name="authorities_contacted">
+            <option selected>Police</option><option>Fire</option><option>Ambulance</option>
+            <option>Other</option><option>None</option>
+          </select>
+        </label>
+        <label>Police report available
+          <select name="police_report_available">
+            <option selected>YES</option><option>NO</option><option value="?">Unknown</option>
+          </select>
+        </label>
+        <label>Insured hobbies
+          <select name="insured_hobbies">
+            <option selected>reading</option><option>chess</option><option>cross-fit</option>
+            <option>golf</option><option>camping</option><option>movies</option><option>yachting</option>
+          </select>
+        </label>
+
+        <label>Incident hour (0–23)<input type="number" name="incident_hour_of_the_day" value="14" min="0" max="23" /></label>
+        <label>Vehicles involved<input type="number" name="number_of_vehicles_involved" value="2" min="1" /></label>
+        <label>Witnesses<input type="number" name="witnesses" value="2" min="0" /></label>
+
+        <label>Auto make
+          <select name="auto_make">
+            <option selected>Toyota</option><option>Honda</option><option>Ford</option><option>BMW</option>
+            <option>Audi</option><option>Mercedes</option><option>Chevrolet</option><option>Nissan</option>
+          </select>
+        </label>
+        <label>Total claim amount<input type="number" name="total_claim_amount" value="32000" min="0" /></label>
+        <label>Vehicle claim<input type="number" name="vehicle_claim" value="20000" min="0" /></label>
+        <label>Injury claim<input type="number" name="injury_claim" value="6000" min="0" /></label>
+        <label>Property claim<input type="number" name="property_claim" value="6000" min="0" /></label>
+
+        <div class="form-actions">
+          <button class="btn primary" id="checkBtn" type="submit">Check Claim</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ───────────── RESULT ───────────── -->
+    <section class="card result-card" id="resultCard">
+      <div class="empty-state" id="emptyState">
+        <span class="big-emoji">🔎</span>
+        <p>Fill in a claim (or load a sample) and click <b>Check Claim</b> to see the verdict.</p>
+      </div>
+
+      <div class="result-body hidden" id="resultBody">
+        <div class="verdict" id="verdictBox">
+          <span class="verdict-badge" id="verdictBadge">—</span>
+          <div class="verdict-meta">
+            <div class="prob-row">
+              <span>Fraud probability</span>
+              <b id="probValue">—</b>
+            </div>
+            <div class="prob-bar"><div class="prob-fill" id="probFill"></div><div class="prob-threshold" id="probThreshold"></div></div>
+            <small id="thresholdNote">threshold —</small>
+          </div>
+        </div>
+
+        <div class="severity-box" id="severityBox">
+          <h3>Predicted claim severity</h3>
+          <div class="amount" id="severityAmount">—</div>
+          <div class="band" id="severityBand"></div>
+          <p class="note hidden" id="severityNote"></p>
+        </div>
+
+        <div class="reasons">
+          <h3>Top factors behind this decision</h3>
+          <ul id="reasonsList"></ul>
+        </div>
+
+        <div class="footer-meta" id="footerMeta"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="page-foot">
+    <span>Demo trained on a synthetic dataset matching the Kaggle auto-insurance schema · explanations via SHAP</span>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
