@@ -12,7 +12,15 @@ with **SHAP-based, plain-English reasons**.
 
 > **Live demo:** _<add your Render/Railway URL here after deploying — see [Deployment](#-deployment)>_
 > **Shareable report:** [`reports/report.html`](reports/report.html) (self-contained, print-to-PDF)
-> **Build it yourself:** [`FROM_SCRATCH_GUIDE.md`](FROM_SCRATCH_GUIDE.md) (👶 fresher-friendly, full code for a simpler version) · [`BUILD_GUIDE.md`](BUILD_GUIDE.md) (production walkthrough) · [`notebooks/fraud_severity_project.ipynb`](notebooks/fraud_severity_project.ipynb) (runnable Jupyter walkthrough)
+### 📚 Which doc should I read?
+| I want to… | Read this |
+|---|---|
+| **Understand how the project works** (the flow) | [`PROJECT_FLOW.md`](PROJECT_FLOW.md) |
+| **Build the full project step by step** (beginner-friendly, all commands + code) | [`COMPLETE_PROJECT_GUIDE.md`](COMPLETE_PROJECT_GUIDE.md) |
+| **Build a simpler version from scratch** (👶 fresher, full copy-paste code) | [`FROM_SCRATCH_GUIDE.md`](FROM_SCRATCH_GUIDE.md) |
+| **Just run this repo quickly** | [`HOW_TO_RUN.md`](HOW_TO_RUN.md) |
+| **Play with the ML interactively** | [`notebooks/fraud_severity_project.ipynb`](notebooks/fraud_severity_project.ipynb) |
+| **Read the polished write-up** | [`reports/report.html`](reports/report.html) |
 
 ---
 
