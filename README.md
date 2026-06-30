@@ -12,7 +12,7 @@ with **SHAP-based, plain-English reasons**.
 
 > **Live demo:** _<add your Render/Railway URL here after deploying — see [Deployment](#-deployment)>_
 > **Shareable report:** [`reports/report.html`](reports/report.html) (self-contained, print-to-PDF)
-> **Build it yourself:** [`BUILD_GUIDE.md`](BUILD_GUIDE.md) (step-by-step) · [`notebooks/fraud_severity_project.ipynb`](notebooks/fraud_severity_project.ipynb) (runnable Jupyter walkthrough)
+> **Build it yourself:** [`FROM_SCRATCH_GUIDE.md`](FROM_SCRATCH_GUIDE.md) (👶 fresher-friendly, full code for a simpler version) · [`BUILD_GUIDE.md`](BUILD_GUIDE.md) (production walkthrough) · [`notebooks/fraud_severity_project.ipynb`](notebooks/fraud_severity_project.ipynb) (runnable Jupyter walkthrough)
 
 ---
 
