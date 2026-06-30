@@ -17,19 +17,20 @@ factor into plain English with the original value, and a direction
 
 from __future__ import annotations
 
-import matplotlib
+import numpy as np
+import pandas as pd
+import shap
+from sklearn.compose import TransformedTargetRegressor
+from sklearn.pipeline import Pipeline
 
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
-import pandas as pd  # noqa: E402
-import shap  # noqa: E402
-from sklearn.compose import TransformedTargetRegressor  # noqa: E402
-from sklearn.pipeline import Pipeline  # noqa: E402
+from src.config import Config, load_config
+from src.feature_engineering import get_feature_names
+from src.logger import get_logger
 
-from src.config import Config, load_config  # noqa: E402
-from src.feature_engineering import get_feature_names  # noqa: E402
-from src.logger import get_logger  # noqa: E402
+# NOTE: matplotlib is imported LAZILY inside generate_shap_artifacts() — it's only
+# needed to draw the report plots, NOT for serving the per-request SHAP "reasons".
+# Keeping it out of module scope lets the slim production image (no matplotlib)
+# import this module for inference without a ModuleNotFoundError.
 
 log = get_logger(__name__)
 
@@ -217,6 +218,12 @@ def generate_shap_artifacts(
         cfg: Optional config.
 
     """
+    # lazy import: only needed here (report plots), kept out of serving (slim image)
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
     cfg = cfg or load_config()
     plots_dir = cfg.path("paths.plots_dir")
     bg = int(cfg.get("explainability.background_samples"))
