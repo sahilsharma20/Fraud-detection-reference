@@ -77,18 +77,23 @@ numpy
 scikit-learn
 flask
 joblib
+matplotlib
+seaborn
+mlflow
 ```
 Install them:
 ```bash
 pip install -r requirements.txt
 ```
-*(First time takes a minute — it's downloading. That's normal.)*
+*(First time takes a couple of minutes — it's downloading. That's normal.)*
 
 **What each one is (simple):**
 | Package | What it does |
 |---|---|
 | **pandas / numpy** | Work with data — tables and numbers. |
 | **scikit-learn** | The machine-learning toolbox (builds & runs the models). |
+| **matplotlib / seaborn** | Draw charts so you can *see* your data (used in EDA). |
+| **mlflow** | A "logbook" that records every training run (scores, settings, the model). |
 | **flask** | Turns your model into a web page with a button. |
 | **joblib** | Saves a trained model to a file so you can reuse it. |
 
@@ -213,9 +218,93 @@ You now have `data/claims.csv`. Open it in Excel to see what claims look like.
 
 ---
 
-## ✅ Step 5 — Train both models with `train.py`
+## ✅ Step 5 — Explore your data first (EDA)
 
-This is the heart of the project. Read the comments — they explain each ML idea in simple terms.
+**EDA = Exploratory Data Analysis** = *look at your data before modelling*. You're answering: How
+much fraud is there? Are amounts skewed? Any missing values? Which fields seem related to fraud? This
+tells you what to do next (and catches surprises early). Create **`eda.py`**:
+
+```python
+# eda.py — look at the data BEFORE training, and save charts to the plots/ folder.
+import os
+import matplotlib
+matplotlib.use("Agg")          # save charts to files instead of opening windows
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+import pandas as pd
+import config as C
+
+
+def main():
+    df = pd.read_csv(C.DATA_FILE)
+    print("Rows, columns:", df.shape)
+    print(df.head(), "\n")
+
+    # 1) How rare is fraud?  (this is WHY accuracy is a bad score here)
+    fraud_rate = (df[C.TARGET_FRAUD] == "Y").mean()
+    print(f"Fraud rate: {fraud_rate:.1%}")
+    print(f"A lazy 'always genuine' model is {1 - fraud_rate:.1%} accurate but catches 0 fraud!\n")
+
+    # 2) Missing values per column (here there are none, but always check)
+    print("Missing values per column:\n", df.isna().sum(), "\n")
+
+    os.makedirs("plots", exist_ok=True)
+    sns.set_theme(style="whitegrid")
+
+    # Chart 1 — fraud vs genuine counts (shows the imbalance)
+    plt.figure(figsize=(5, 4))
+    df[C.TARGET_FRAUD].value_counts().plot.bar(color=["#2e7d32", "#c62828"])
+    plt.title(f"Fraud class balance (fraud = {fraud_rate:.1%})")
+    plt.ylabel("number of claims")
+    plt.tight_layout(); plt.savefig("plots/class_balance.png"); plt.close()
+
+    # Chart 2 — claim amount is skewed; log() makes it look normal (why we log-transform)
+    fig, ax = plt.subplots(1, 2, figsize=(11, 4))
+    sns.histplot(df[C.TARGET_SEVERITY], bins=40, kde=True, ax=ax[0], color="#1565c0")
+    ax[0].set_title(f"total_claim_amount (skew = {df[C.TARGET_SEVERITY].skew():.2f})")
+    sns.histplot(np.log1p(df[C.TARGET_SEVERITY]), bins=40, kde=True, ax=ax[1], color="#6a1b9a")
+    ax[1].set_title("log(total_claim_amount) — much more balanced")
+    plt.tight_layout(); plt.savefig("plots/claim_amount.png"); plt.close()
+
+    # Chart 3 — which numbers relate most to fraud?
+    fraud_as_number = (df[C.TARGET_FRAUD] == "Y").astype(int)
+    corr = (df[C.NUMERIC + C.FRAUD_ONLY_NUMERIC]
+            .corrwith(fraud_as_number).abs().sort_values())
+    plt.figure(figsize=(6, 4))
+    corr.plot.barh(color="#0d9488")
+    plt.title("How strongly each number relates to fraud")
+    plt.tight_layout(); plt.savefig("plots/fraud_correlation.png"); plt.close()
+
+    print("Saved 3 charts in the plots/ folder — open them and have a look!")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+Run it:
+```bash
+python eda.py
+```
+Open the **`plots/`** folder and look at the 3 images. **What you should notice (and why it matters):**
+- **`class_balance.png`** — fraud is the small bar. Imbalance ⇒ *don't trust accuracy*; we'll score
+  with **PR-AUC** instead.
+- **`claim_amount.png`** — the left chart is lopsided (skewed), the right (log) is balanced ⇒ we'll
+  **log-transform** the amount for the severity model.
+- **`fraud_correlation.png`** — the longest bars are the fields most linked to fraud (severity, claim
+  size…). Good — the model has real signal to learn from.
+
+> 💡 In the full project, EDA lives in [`src/eda.py`](src/eda.py) and the charts are embedded into the
+> shareable `reports/report.html`.
+
+---
+
+## ✅ Step 6 — Train both models with `train.py` (with MLflow tracking)
+
+This is the heart of the project. We also add **MLflow** — think of it as a *logbook*: every time you
+train, it records the settings, the scores, and the model itself, so you can compare experiments
+later in a nice web dashboard. Read the comments — they explain each ML idea simply.
 Create **`train.py`**:
 
 ```python
@@ -233,6 +322,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.metrics import (average_precision_score, roc_auc_score, accuracy_score,
                              mean_absolute_error, r2_score)
+import mlflow                 # the experiment "logbook"
 import config as C
 
 
@@ -286,23 +376,40 @@ def main():
         "random_forest": RandomForestClassifier(n_estimators=300, max_depth=12,
                                                 min_samples_leaf=5, random_state=C.RANDOM_STATE),
     }
-    best_model, best_score, best_proba = None, -1, None
+    mlflow.set_experiment("fraud_detection")      # MLflow groups all these runs together
+    best_model, best_name, best_score, best_proba = None, None, -1, None
+
     for name, clf in candidates.items():
-        # a "pipeline" = clean the data + run the model, as one object
-        pipe = Pipeline([("prep", build_preprocessor("fraud")), ("model", clf)])
-        pipe.fit(X_train, y_train)
-        proba = pipe.predict_proba(X_test)[:, 1]            # probability of fraud (0..1)
+        with mlflow.start_run(run_name=name):     # each model = one tracked "run"
+            # a "pipeline" = clean the data + run the model, as one object
+            pipe = Pipeline([("prep", build_preprocessor("fraud")), ("model", clf)])
+            pipe.fit(X_train, y_train)
+            proba = pipe.predict_proba(X_test)[:, 1]        # probability of fraud (0..1)
 
-        # PR-AUC is the RIGHT score for rare events like fraud (not accuracy!)
-        pr_auc = average_precision_score(y_test, proba)
-        roc = roc_auc_score(y_test, proba)
-        acc = accuracy_score(y_test, (proba >= 0.5).astype(int))
-        print(f"[{name}] PR-AUC={pr_auc:.3f}  ROC-AUC={roc:.3f}  accuracy={acc:.3f} (<- misleading)")
-        if pr_auc > best_score:
-            best_model, best_score, best_proba = pipe, pr_auc, proba
+            # PR-AUC is the RIGHT score for rare events like fraud (not accuracy!)
+            pr_auc = average_precision_score(y_test, proba)
+            roc = roc_auc_score(y_test, proba)
+            acc = accuracy_score(y_test, (proba >= 0.5).astype(int))
 
-    joblib.dump(best_model, C.FRAUD_MODEL_FILE)
-    print(f"Saved fraud model.\n")
+            # ---- write everything to the MLflow logbook ----
+            mlflow.log_param("model_type", name)
+            mlflow.log_metric("pr_auc", pr_auc)
+            mlflow.log_metric("roc_auc", roc)
+            mlflow.log_metric("accuracy", acc)
+            mlflow.sklearn.log_model(pipe, artifact_path="model")   # save the model too
+
+            print(f"[{name}] PR-AUC={pr_auc:.3f}  ROC-AUC={roc:.3f}  accuracy={acc:.3f} (<- misleading)")
+            if pr_auc > best_score:
+                best_model, best_name, best_score, best_proba = pipe, name, pr_auc, proba
+
+    # (optional) register the WINNING model in MLflow's Model Registry — a named,
+    # versioned model you could later mark as "production".
+    with mlflow.start_run(run_name=f"best_{best_name}"):
+        mlflow.sklearn.log_model(best_model, artifact_path="model",
+                                 registered_model_name="fraud_classifier")
+
+    joblib.dump(best_model, C.FRAUD_MODEL_FILE)   # also save a plain file for the website
+    print(f"Best fraud model: {best_name}. Saved + tracked in MLflow.\n")
 
     # =================== CHOOSE A SMART THRESHOLD ===================
     # The model gives a probability. WE choose the cut-off. 0.5 is rarely best,
@@ -359,11 +466,25 @@ Run it:
 ```bash
 python train.py
 ```
-You'll see the scores printed, and 3 files appear in `models/`. 🎉
+You'll see the scores printed, 3 files appear in `models/`, **and a new `mlruns/` folder appears** —
+that's MLflow's logbook of your training runs.
+
+**Now open the MLflow dashboard to compare your experiments:**
+```bash
+mlflow ui --port 5001
+```
+Open **http://localhost:5001** in your browser. You'll see each model as a row with its PR-AUC /
+ROC-AUC side by side, the settings you used, and the saved model — so you can prove *which* model is
+best and why. (We use port **5001** so it doesn't clash with the Flask website on 5000. Press
+**Ctrl + C** to stop the dashboard.)
+
+> 💡 You can track the **severity** model the same way — wrap its training in
+> `with mlflow.start_run(run_name="severity"):` and `mlflow.log_metric("mae", mae)`. The full project
+> does exactly this in [`src/fraud_model.py`](src/fraud_model.py) and [`src/severity_model.py`](src/severity_model.py).
 
 ---
 
-## ✅ Step 6 — The "brain": `predict.py`
+## ✅ Step 7 — The "brain": `predict.py`
 
 This loads the saved models and does the **chaining** (fraud first, then money only if genuine).
 Create **`predict.py`**:
@@ -435,7 +556,7 @@ python predict.py
 
 ---
 
-## ✅ Step 7 — The website: `app.py` + `templates/index.html`
+## ✅ Step 8 — The website: `app.py` + `templates/index.html`
 
 Create **`app.py`**:
 ```python
@@ -576,9 +697,11 @@ claim amount → you'll see **🚩 NEEDS REVIEW**. Use mild values → **✅ GEN
 ```bash
 .venv\Scripts\activate          # turn on the environment
 pip install -r requirements.txt # once
-python generate_data.py         # make data
-python train.py                 # train + save models
-python app.py                   # start the website -> http://localhost:5000
+python generate_data.py         # 1. make data
+python eda.py                   # 2. explore data -> charts in plots/
+python train.py                 # 3. train + save models (+ MLflow logbook)
+mlflow ui --port 5001           # 4. (optional) view experiments -> http://localhost:5001
+python app.py                   # 5. start the website -> http://localhost:5000
 ```
 
 ---
@@ -593,7 +716,8 @@ maps to a file you can open and read:
 | `config.py` constants | [`config.yaml`](config.yaml) + a typed loader ([`src/config.py`](src/config.py)) |
 | `print()` for messages | Real logging ([`src/logger.py`](src/logger.py)) |
 | `build_preprocessor()` | The same idea, reusable + a custom transformer ([`src/feature_engineering.py`](src/feature_engineering.py)) |
-| LR + RF | Adds **XGBoost** + experiment tracking with **MLflow** ([`src/fraud_model.py`](src/fraud_model.py)) |
+| EDA charts (`eda.py`) | Same idea, charts embedded into the HTML report ([`src/eda.py`](src/eda.py)) |
+| LR + RF + **MLflow** tracking | Adds **XGBoost** (a 3rd model) + MLflow **Model Registry** promotion ([`src/fraud_model.py`](src/fraud_model.py)) |
 | cost threshold | [`src/threshold_optimizer.py`](src/threshold_optimizer.py) (saves a cost-vs-threshold plot) |
 | severity model | [`src/severity_model.py`](src/severity_model.py) |
 | (no explanations) | **SHAP** "why" reasons ([`src/explainability.py`](src/explainability.py)) |
