@@ -46,27 +46,35 @@ def configure_logging(log_dir: str | Path = "logs", level: int = logging.INFO) -
     except (AttributeError, ValueError):
         pass
 
-    log_path = Path(log_dir)
-    log_path.mkdir(parents=True, exist_ok=True)
-    # UTC date stamp keeps log filenames stable regardless of server timezone.
-    logfile = log_path / f"run_{datetime.now(UTC):%Y%m%d}.log"
-
     formatter = logging.Formatter(fmt=_LOG_FORMAT, datefmt=_DATE_FORMAT)
-
-    console = logging.StreamHandler(stream=sys.stdout)
-    console.setFormatter(formatter)
-
-    # Rotate at 5 MB, keep 3 backups — bounded disk usage on long-running services.
-    file_handler = RotatingFileHandler(
-        logfile, maxBytes=5 * 1024 * 1024, backupCount=3, encoding="utf-8"
-    )
-    file_handler.setFormatter(formatter)
 
     root = logging.getLogger()
     root.setLevel(level)
     root.handlers.clear()  # drop any handlers a library installed before us
+
+    # Console handler FIRST — this is the one that matters in containers (Docker /
+    # Render capture stdout). It must always be present.
+    console = logging.StreamHandler(stream=sys.stdout)
+    console.setFormatter(formatter)
     root.addHandler(console)
-    root.addHandler(file_handler)
+
+    # File logging is BEST-EFFORT. In a read-only / non-root container the working
+    # dir often isn't writable (e.g. Render runs us as a non-root user in /app).
+    # Logging must NEVER crash the app — if we can't open a log file, fall back to
+    # console-only (which the platform already captures).
+    try:
+        log_path = Path(log_dir)
+        log_path.mkdir(parents=True, exist_ok=True)
+        # UTC date stamp keeps log filenames stable regardless of server timezone.
+        logfile = log_path / f"run_{datetime.now(UTC):%Y%m%d}.log"
+        # Rotate at 5 MB, keep 3 backups — bounded disk usage on long-running services.
+        file_handler = RotatingFileHandler(
+            logfile, maxBytes=5 * 1024 * 1024, backupCount=3, encoding="utf-8"
+        )
+        file_handler.setFormatter(formatter)
+        root.addHandler(file_handler)
+    except OSError as exc:
+        root.warning("File logging disabled (%s) — logging to stdout only.", exc)
 
     # Quiet down chatty third-party loggers so our signal isn't buried.
     for noisy in ("matplotlib", "shap", "git", "urllib3", "mlflow"):
